@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FocusFrog Todo</title>
+  <style>
+    :root {
+      --bg: #14161F;
+      --surface: #1F222E;
+      --surface-inset: #11131B;
+      --text: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent: #4F6EF7;
+      --gold: #D4AF37;
+      --shadow-dark: rgba(7, 9, 14, 0.78);
+      --shadow-light: rgba(46, 51, 70, 0.34);
+    }
+    body.theme-light-pebble {
+      --bg: #E6E9F0;
+      --surface: #EEF1F6;
+      --surface-inset: #DCE1EA;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --shadow-dark: rgba(176, 184, 199, 0.65);
+      --shadow-light: rgba(255, 255, 255, 0.92);
+    }
+    body.theme-amoled-black {
+      --bg: #000000;
+      --surface: #0C0D12;
+      --surface-inset: #050608;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --shadow-dark: rgba(0, 0, 0, 0.95);
+      --shadow-light: rgba(255, 255, 255, 0.06);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 132px;
+    }
+    .neu-card {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 6px 6px 14px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+    }
+    .neu-inset {
+      background: var(--surface-inset);
+      border-radius: 14px;
+      box-shadow: inset 3px 3px 7px var(--shadow-dark), inset -2px -2px 6px var(--shadow-light);
+    }
+    .frog-card {
+      border: 1.5px solid var(--gold);
+      box-shadow: 0 0 18px rgba(212, 175, 55, 0.2), 6px 6px 14px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+    }
+    .container { padding: 16px; max-width: 680px; margin: 0 auto; width: 100%; }
+    .header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .greeting { font-size: 20px; font-weight: 700; margin: 0; }
+    .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .pill-btn {
+      border: none;
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 3px 3px 8px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
+    }
+    .progress-pill {
+      background: rgba(79, 110, 247, 0.16);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 12px;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      border: none;
+      background: var(--surface);
+      color: var(--text-muted);
+      padding: 8px 13px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 3px 3px 7px var(--shadow-dark), -2px -2px 5px var(--shadow-light);
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+    .feed { display: flex; flex-direction: column; gap: 12px; }
+    .task-row { display: flex; align-items: flex-start; gap: 12px; }
+    .check-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: var(--surface-inset);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    .check-circle.done {
+      background: #22C55E;
+      border-color: #22C55E;
+    }
+    .task-title { font-size: 15px; font-weight: 600; margin: 0 0 4px 0; }
+    .task-completed { opacity: 0.55; }
+    .task-completed .task-title { text-decoration: line-through; }
+    .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 11px; color: var(--text-muted); }
+    .tag { background: rgba(79, 110, 247, 0.16); color: var(--accent); padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    .actions { display: flex; gap: 6px; margin-left: auto; }
+    .icon-btn {
+      border: none;
+      background: var(--surface-inset);
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .subtasks { margin-top: 10px; padding-left: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .sub-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+    .habit-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+    .day-dot {
+      height: 34px;
+      border-radius: 12px;
+      border: none;
+      background: var(--surface-inset);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .day-dot.checked {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+    .quick-dock {
+      position: fixed;
+      bottom: 62px;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      padding: 8px 14px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .quick-row { display: flex; gap: 8px; max-width: 680px; margin: 0 auto; }
+    .quick-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .fab {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #FFF;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 62px;
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-item {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .nav-item.active { color: var(--accent); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1 class="greeting" id="greeting">Good evening, Alex!</h1>
+        <div class="sub">FocusFrog Todo</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="pill-btn" id="themeBtn" type="button">Customise</button>
+        <span class="progress-pill" id="progressPill">65% done</span>
+      </div>
+    </header>
+
+    <div class="tabs" id="viewTabs"></div>
+    <main class="feed" id="mainFeed"></main>
+  </div>
+
+  <div class="quick-dock">
+    <div class="quick-row">
+      <input id="quickInput" class="quick-input neu-inset" placeholder="Add task (e.g. Submit report at 5pm #Work)" />
+      <button id="addBtn" class="fab" type="button" aria-label="Add Task">+</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-nav="home" type="button"><span>🏠</span><span>Home</span></button>
+    <button class="nav-item" data-nav="recur" type="button"><span>🔁</span><span>Recur</span></button>
+    <button class="nav-item" data-nav="stats" type="button"><span>📊</span><span>Stats</span></button>
+    <button class="nav-item" data-nav="settings" type="button"><span>⚙️</span><span>Settings</span></button>
+  </nav>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = 'focusfrog_offline_v1';
+      var SEED_TASKS = [{"id":"task-frog-1","title":"Finalize Q3 Product Roadmap","isFrog":true,"category":"Work","dueTime":"2:00 PM","dayIndex":2,"quadrant":"urgent-important","kanbanStatus":"doing","completed":false,"reminder":true,"subtasks":[{"id":"sub-1","title":"Audit engineering capacity","completed":true},{"id":"sub-2","title":"Sync milestone dates with design","completed":true},{"id":"sub-3","title":"Send executive sign-off deck","completed":false}]},{"id":"task-2","title":"30m Zone 2 Outdoor Run","isFrog":false,"category":"Health","dueTime":"5:30 PM","dayIndex":2,"quadrant":"not-urgent-important","kanbanStatus":"todo","completed":false,"reminder":true,"subtasks":[]},{"id":"task-3","title":"Sketch offline sync architecture","isFrog":false,"category":"Ideas","dueTime":"7:00 PM","dayIndex":3,"quadrant":"not-urgent-important","kanbanStatus":"todo","completed":false,"reminder":false,"subtasks":[]},{"id":"task-4","title":"Morning Deep Work Sprint","isFrog":false,"category":"Work","dueTime":"9:30 AM","dayIndex":2,"quadrant":"urgent-important","kanbanStatus":"done","completed":true,"reminder":false,"subtasks":[]},{"id":"task-5","title":"Pick up fresh groceries","isFrog":false,"category":"Personal","dueTime":"12:15 PM","dayIndex":2,"quadrant":"urgent-not-important","kanbanStatus":"done","completed":true,"reminder":false,"subtasks":[]},{"id":"task-6","title":"Review Android PR #42","isFrog":false,"category":"Work","dueTime":"11:00 AM","dayIndex":1,"quadrant":"urgent-important","kanbanStatus":"done","completed":true,"reminder":false,"subtasks":[]}];
+      var SEED_HABITS = [{"id":"habit-water","title":"Water Tracker","emoji":"💧","daysChecked":[true,true,true,true,true,false,false]},{"id":"habit-read","title":"Read 20 Pages","emoji":"📖","daysChecked":[true,true,true,true,true,false,false]}];
+      var DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+      var THEMES = ['dark-neumorphic', 'light-pebble', 'amoled-black'];
+
+      var state = {
+        tasks: SEED_TASKS.length ? SEED_TASKS : [
+          { id: 'f1', title: 'Finalize Q3 Product Roadmap', isFrog: true, category: 'Work', dueTime: '2:00 PM', completed: false, reminder: true, quadrant: 'urgent-important', subtasks: [{ id: 's1', title: 'Audit engineering capacity', completed: true }, { id: 's2', title: 'Send executive sign-off', completed: false }] },
+          { id: 't2', title: '30m Zone 2 Outdoor Run', isFrog: false, category: 'Health', dueTime: '5:30 PM', completed: false, reminder: true, quadrant: 'not-urgent-important', subtasks: [] },
+          { id: 't3', title: 'Morning Deep Work Sprint', isFrog: false, category: 'Work', dueTime: '9:30 AM', completed: true, reminder: false, quadrant: 'urgent-important', subtasks: [] }
+        ],
+        habits: SEED_HABITS.length ? SEED_HABITS : [
+          { id: 'h1', title: 'Water Tracker', emoji: '💧', daysChecked: [true, true, true, true, true, false, false] }
+        ],
+        viewMode: 'list',
+        navTab: 'home',
+        themeIndex: 0
+      };
+
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          var parsed = JSON.parse(saved);
+          if (parsed && Array.isArray(parsed.tasks)) state = Object.assign(state, parsed);
+        }
+      } catch (e) {}
+
+      function save() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      function haptic(ms) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+          window.AndroidBridge.vibrate(ms || 18);
+        }
+      }
+
+      function calcProgress() {
+        var total = 0, done = 0;
+        state.tasks.forEach(function (t) {
+          total++; if (t.completed) done++;
+          (t.subtasks || []).forEach(function (s) { total++; if (s.completed) done++; });
+        });
+        state.habits.forEach(function (h) {
+          (h.daysChecked || []).forEach(function (c) { total++; if (c) done++; });
+        });
+        return total ? Math.round((done / total) * 100) : 0;
+      }
+
+      function applyTheme() {
+        document.body.className = 'theme-' + THEMES[state.themeIndex % THEMES.length];
+      }
+
+      function renderTabs() {
+        var views = [
+          { id: 'list', label: 'List (' + state.tasks.filter(function(t){return !t.completed;}).length + ')' },
+          { id: 'kanban', label: 'Kanban' },
+          { id: 'calendar', label: 'Calendar' },
+          { id: 'matrix', label: 'Matrix' },
+          { id: 'habits', label: 'Habits (' + state.habits.length + ')' }
+        ];
+        var el = document.getElementById('viewTabs');
+        el.innerHTML = '';
+        views.forEach(function (v) {
+          var btn = document.createElement('button');
+          btn.className = 'tab-btn' + (state.viewMode === v.id ? ' active' : '');
+          btn.textContent = v.label;
+          btn.onclick = function () { state.viewMode = v.id; haptic(12); render(); };
+          el.appendChild(btn);
+        });
+      }
+
+      function renderTaskCard(task) {
+        var card = document.createElement('div');
+        card.className = 'neu-card' + (task.isFrog ? ' frog-card' : '') + (task.completed ? ' task-completed' : '');
+        var row = document.createElement('div');
+        row.className = 'task-row';
+
+        var chk = document.createElement('button');
+        chk.className = 'check-circle' + (task.completed ? ' done' : '');
+        chk.textContent = task.completed ? '✓' : '';
+        chk.onclick = function () {
+          task.completed = !task.completed;
+          haptic(25);
+          save();
+          render();
+        };
+
+        var body = document.createElement('div');
+        body.style.flex = '1';
+        var title = document.createElement('div');
+        title.className = 'task-title';
+        title.textContent = (task.isFrog ? '🐸 ' : '') + task.title;
+
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = '<span class="tag">' + task.category + '</span><span>🕒 ' + task.dueTime + '</span>';
+
+        body.appendChild(title);
+        body.appendChild(meta);
+
+        if (task.subtasks && task.subtasks.length) {
+          var subs = document.createElement('div');
+          subs.className = 'subtasks';
+          task.subtasks.forEach(function (s) {
+            var item = document.createElement('div');
+            item.className = 'sub-item';
+            item.textContent = (s.completed ? '☑ ' : '☐ ') + s.title;
+            item.onclick = function () {
+              s.completed = !s.completed;
+              haptic(14);
+              save();
+              render();
+            };
+            subs.appendChild(item);
+          });
+          body.appendChild(subs);
+        }
+
+        var actions = document.createElement('div');
+        actions.className = 'actions';
+        var delBtn = document.createElement('button');
+        delBtn.className = 'icon-btn';
+        delBtn.textContent = '🗑';
+        delBtn.onclick = function () {
+          state.tasks = state.tasks.filter(function (x) { return x.id !== task.id; });
+          haptic(20);
+          save();
+          render();
+        };
+        actions.appendChild(delBtn);
+
+        row.appendChild(chk);
+        row.appendChild(body);
+        row.appendChild(actions);
+        card.appendChild(row);
+        return card;
+      }
+
+      function renderHabits(target) {
+        state.habits.forEach(function (habit) {
+          var card = document.createElement('div');
+          card.className = 'neu-card';
+          var head = document.createElement('div');
+          head.style.display = 'flex';
+          head.style.justifyContent = 'space-between';
+          head.innerHTML = '<strong>' + habit.emoji + ' ' + habit.title + '</strong><span class="sub">' + habit.daysChecked.filter(Boolean).length + '/7 days</span>';
+          var grid = document.createElement('div');
+          grid.className = 'habit-days';
+          habit.daysChecked.forEach(function (checked, idx) {
+            var b = document.createElement('button');
+            b.className = 'day-dot' + (checked ? ' checked' : '');
+            b.textContent = DAYS[idx];
+            b.onclick = function () {
+              habit.daysChecked[idx] = !habit.daysChecked[idx];
+              haptic(16);
+              save();
+              render();
+            };
+            grid.appendChild(b);
+          });
+          card.appendChild(head);
+          card.appendChild(grid);
+          target.appendChild(card);
+        });
+      }
+
+      function render() {
+        applyTheme();
+        document.getElementById('progressPill').textContent = calcProgress() + '% done';
+        renderTabs();
+        var feed = document.getElementById('mainFeed');
+        feed.innerHTML = '';
+
+        if (state.navTab === 'recur' || state.viewMode === 'habits') {
+          renderHabits(feed);
+          return;
+        }
+        if (state.navTab === 'stats') {
+          var doneCount = state.tasks.filter(function (t) { return t.completed; }).length;
+          var statCard = document.createElement('div');
+          statCard.className = 'neu-card';
+          statCard.innerHTML = '<h3 style="margin:0 0 8px 0;">Focus Summary</h3><div class="sub">Completed Tasks: ' + doneCount + ' / ' + state.tasks.length + '</div><div class="sub">Overall Progress: ' + calcProgress() + '%</div>';
+          feed.appendChild(statCard);
+          return;
+        }
+        if (state.navTab === 'settings') {
+          var setCard = document.createElement('div');
+          setCard.className = 'neu-card';
+          setCard.innerHTML = '<h3 style="margin:0 0 8px 0;">App Settings</h3><div class="sub">Theme: ' + THEMES[state.themeIndex % THEMES.length] + '</div>';
+          var expBtn = document.createElement('button');
+          expBtn.className = 'pill-btn';
+          expBtn.style.marginTop = '12px';
+          expBtn.textContent = 'Export JSON Backup';
+          expBtn.onclick = function () {
+            if (window.AndroidBridge && window.AndroidBridge.exportJson) {
+              window.AndroidBridge.exportJson(JSON.stringify(state, null, 2));
+            }
+          };
+          setCard.appendChild(expBtn);
+          feed.appendChild(setCard);
+          return;
+        }
+
+        if (state.viewMode === 'matrix') {
+          var mGrid = document.createElement('div');
+          mGrid.className = 'grid-2';
+          ['urgent-important', 'not-urgent-important', 'urgent-not-important', 'not-urgent-not-important'].forEach(function (q) {
+            var box = document.createElement('div');
+            box.className = 'neu-card';
+            box.innerHTML = '<div style="font-size:12px;font-weight:700;margin-bottom:6px;">' + q.replace(/-/g, ' ').toUpperCase() + '</div>';
+            state.tasks.filter(function (t) { return (t.quadrant || 'urgent-important') === q; }).forEach(function (t) {
+              var row = document.createElement('div');
+              row.className = 'sub';
+              row.textContent = (t.completed ? '✓ ' : '• ') + t.title;
+              box.appendChild(row);
+            });
+            mGrid.appendChild(box);
+          });
+          feed.appendChild(mGrid);
+          return;
+        }
+
+        state.tasks.forEach(function (task) {
+          feed.appendChild(renderTaskCard(task));
+        });
+        renderHabits(feed);
+      }
+
+      document.getElementById('themeBtn').onclick = function () {
+        state.themeIndex = (state.themeIndex + 1) % THEMES.length;
+        haptic(14);
+        save();
+        render();
+      };
+
+      document.getElementById('addBtn').onclick = function () {
+        var input = document.getElementById('quickInput');
+        var raw = input.value.trim();
+        if (!raw) return;
+        var tagMatch = raw.match(/#(Work|Health|Personal|Ideas)\b/i);
+        var category = tagMatch ? tagMatch[1][0].toUpperCase() + tagMatch[1].slice(1).toLowerCase() : 'Work';
+        var clean = raw.replace(/#[a-zA-Z0-9_-]+/g, '').trim() || raw;
+        state.tasks.unshift({
+          id: 't-' + Date.now(),
+          title: clean,
+          isFrog: false,
+          category: category,
+          dueTime: '5:00 PM',
+          completed: false,
+          reminder: false,
+          quadrant: 'urgent-important',
+          subtasks: []
+        });
+        input.value = '';
+        haptic(22);
+        save();
+        render();
+      };
+
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.onclick = function () {
+          document.querySelectorAll('.nav-item').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          state.navTab = btn.getAttribute('data-nav');
+          haptic(10);
+          render();
+        };
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
